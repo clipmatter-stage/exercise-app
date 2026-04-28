@@ -20,24 +20,25 @@ class ExerciseController extends Controller
         $quantity = $input['quantity'];
         $tiers = collect($input['tiers']);
         $tiers = $tiers->sortByDesc('min');
-        $success = false;
-        $error = null;
+        $validTiers = [];
         foreach ($tiers as $tier) {
             if ($quantity >= $tier['min']) {
-                $price = $tier['price'];
-                $success = true;
-                $error = null;
-                return response()->json([
-                    'success' => $success,
-                    'data' => [ 'price' => $price ],
-                    'error' => $error ?? null
-                ]);
+                $validTiers[] = $tier;
+
             }
         }
+        if (empty($validTiers)) {
+            return response()->json([
+                'success' => false,
+                'data' => null,
+                'error' => 'Quantity does not meet the minimum requirement for any tier'
+            ]);
+        }
+        $price = $validTiers[0]['price'];
         return response()->json([
-            'success' => $success,
-            'data' => null,
-            'error' => 'Quantity does not meet the minimum requirement for any tier'
+            'success' => true,
+            'data' => ['price' => $price],
+            'error' => null
         ]);
     }
 }
