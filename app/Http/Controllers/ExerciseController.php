@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
 
-class ExerciseControlller extends Controller
+class ExerciseController extends Controller
 {
     public function tierPricing(Request $request)
     {

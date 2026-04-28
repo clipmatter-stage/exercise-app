@@ -1,8 +1,9 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
-use App\Http\Controllers\ExerciseControlller;
+use App\Http\Controllers\ExerciseController;
 
 Route::get('/', function () {
     return Inertia::render('welcome');
@@ -14,7 +15,7 @@ Route::middleware(['auth'])->group(function () {
     })->name('dashboard');
 });
 
-Route::post('/exercise-1−artwork-version', function (Request $request) {
+Route::post('/exercise-1-artwork-version', function (Request $request) {
     $validated = $request->validate([
         'input' => 'required|array',
         'input.*.id' => 'required|integer',
@@ -49,6 +50,6 @@ Route::post('/exercise-1−artwork-version', function (Request $request) {
         ]);
     }
 });
-Route::post('/exercise-2−tier-pricing', [ExerciseControlller::class, 'tierPricing']);
+Route::post('/exercise-2-tier-pricing', [ExerciseController::class, 'tierPricing']);
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';
