@@ -41,23 +41,24 @@ class ExerciseController extends Controller
             'error' => null
         ]);
     }
-        public function cartValidator(Request $request){
-        $validated =$request->validate([
+    public function cartValidator(Request $request)
+    {
+        $validated = $request->validate([
             'input' => 'required|array',
-            'input.*.id'=>'required|integer',
-            'input.*.required'=>'required|boolean',
-            'input.*.done'=>'required|boolean'
+            'input.*.id' => 'required|integer',
+            'input.*.required' => 'required|boolean',
+            'input.*.done' => 'required|boolean'
         ]);
         $valid = false;
         $input = $validated['input'];
         $invalidItems = [];
-        foreach($input as $item){
-            if($item['required'] && !$item['done']){
+        foreach ($input as $item) {
+            if ($item['required'] && !$item['done']) {
                 $invalidItems[] = $item['id'];
-                $valid =false;
+                $valid = false;
             }
         }
-        if(empty($invalidItems)){
+        if (empty($invalidItems)) {
             $valid = true;
             return response()->json([
                 'success' => false,
@@ -72,8 +73,51 @@ class ExerciseController extends Controller
             'success' => true,
             'data' => [
                 'valid' => $valid,
-                'invalid_items' =>$invalidItems ],
+                'invalid_items' => $invalidItems
+            ],
             'error' => null,
         ]);
-}
+    }
+
+    public function vendorAllocation(Request $request)
+    {
+        $validated = $request->validateWithBag('vendorAllocation', [
+            'input' => 'required|array',
+            'input.order_qty' => 'required|integer|min:1',
+            'input.vendors' => 'required|array',
+            'input.vendors.*.id' => 'required|integer',
+            'input.vendors.*.stock' => 'required|integer|min:0',
+        ]);
+        $input = $validated['input'];
+        $orderQty = $input['order_qty'];
+        $vendors = $input['vendors'];
+        $allocations = [];
+        foreach ($vendors as $vendor) {
+            if ($orderQty <= 0) {
+                break;
+            }
+            if ($vendor['stock'] <= 0) {
+                continue;
+            }
+            $allocated = min($orderQty, $vendor['stock']);
+            $allocations[] = [
+                'vendor_id' => $vendor['id'],
+                'allocated' => $allocated
+            ];
+            $orderQty -= $allocated;
+        }
+
+        if ($orderQty > 0) {
+            return response()->json([
+                'success' => false,
+                'data' => null,
+                'error' => 'Not  enough stock to fulfill order'
+            ]);
+        }
+        return response()->json([
+            'success' => true,
+            'data' => $allocations,
+            'error' => null
+        ]);
+    }
 }
