@@ -41,4 +41,39 @@ class ExerciseController extends Controller
             'error' => null
         ]);
     }
+        public function cartValidator(Request $request){
+        $validated =$request->validate([
+            'input' => 'required|array',
+            'input.*.id'=>'required|integer',
+            'input.*.required'=>'required|boolean',
+            'input.*.done'=>'required|boolean'
+        ]);
+        $valid = false;
+        $input = $validated['input'];
+        $invalidItems = [];
+        foreach($input as $item){
+            if($item['required'] && !$item['done']){
+                $invalidItems[] = $item['id'];
+                $valid =false;
+            }
+        }
+        if(empty($invalidItems)){
+            $valid = true;
+            return response()->json([
+                'success' => false,
+                'data' => [
+                    'valid' => $valid,
+                    'invalid_items' => $invalidItems
+                ],
+                'error' => 'No invalid  Items Found',
+            ]);
+        }
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'valid' => $valid,
+                'invalid_items' =>$invalidItems ],
+            'error' => null,
+        ]);
+}
 }
