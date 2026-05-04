@@ -120,4 +120,46 @@ class ExerciseController extends Controller
             'error' => null
         ]);
     }
+     public function discount(Request $request)
+    {
+        $validated = $request->validateWithBag('discount', [
+            'input' => 'required|array',
+            'input.price' => 'required|numeric|min:1',
+            'input.discounts' => 'required|array',
+            'input.discounts.*.type' => 'required|string|in:percentage,flat',
+            'input.discounts.*.value' => 'required|numeric|min:1'
+        ]);
+        $input = $validated['input'];
+        $price = $input['price'];
+        $discounts = $input['discounts'];
+        $finalPrice = [];
+        foreach ($discounts as $discount) {
+            if ($discount['type'] === 'percentage') {
+                $finalPrice[] = $price - ($price * ($discount['value'] / 100));
+                continue;
+            } elseif ($discount['type'] === 'flat') {
+                $flatDiscount = $price - $discount['value'];
+                if ($flatDiscount <= 0) {
+                    break;
+                } else {
+                    $finalPrice[] = $flatDiscount;
+                }
+            }
+        }
+
+        if (empty($finalPrice)) {
+            return response()->json([
+                'success' => false,
+                'data' => null,
+                'error' => 'No valid discounts found'
+            ]);
+        }
+
+        $lowestPrice = min($finalPrice);
+        return response()->json([
+            'success' => true,
+            'data' => ['final_price' => $lowestPrice],
+            'error' => null
+        ]);
+    }
 }
