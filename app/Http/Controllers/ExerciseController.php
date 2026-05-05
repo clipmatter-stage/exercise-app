@@ -162,4 +162,38 @@ class ExerciseController extends Controller
             'error' => null
         ]);
     }
+    public function approvalFlow(Request $request){
+
+        $validated =$request->validate([
+            'input' => 'required|array',
+            'input.steps' => 'required|array',
+            'input.steps.*.id' => 'required|string|regex:/^[A-Z]+$/|in:A,B,C',
+            'input.steps.*.depends_on' => 'nullable|string|regex:/^[A-Z]+$/|in:A,B,C'
+        ]);
+        $input =$validated['input'];
+        $lastStepId = null;
+        $allValidSteps = [];
+        $stepsCount= count($input['steps']);
+        foreach ($input['steps'] as $idx => $step) {
+            if ($idx === 0 && $step['depends_on'] === null) {
+                $lastStepId = $step['id'];
+                $allValidSteps[] = $step;
+            }elseif($lastStepId === $step['depends_on'] && $idx > 0 && $step['depends_on'] !== null){
+                $lastStepId = $step['id'];
+                $allValidSteps[] = $step;
+            }
+        }
+        if (count($allValidSteps) !== $stepsCount) {
+            return response()->json([
+                'success' => false,
+                'data' => null,
+                'error' => 'Invalid step sequence'
+            ]);
+        }
+        return response()->json([
+            'success' => true,
+            'data' => ['valid' => true],
+            'error' => null
+        ]);
+    }
 }

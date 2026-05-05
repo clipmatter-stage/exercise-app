@@ -44,3 +44,4 @@ Route::post('/exercise-2-tier-pricing', [ExerciseController::class, 'tierPricing
 Route::post('/exercise-3-cart-validator', [ExerciseController::class, 'cartValidator']);
 Route::post('/exercise-4-vendor-allocation', [ExerciseController::class, 'vendorAllocation']);
 Route::post('/exercise-5-discount', [ExerciseController::class, 'discount']);
+Route::post('/exercise-6-approval-flow', [ExerciseController::class, 'approvalFlow']);
