@@ -196,4 +196,40 @@ class ExerciseController extends Controller
             'error' => null
         ]);
     }
+    public function inventory(Request $request)
+    {
+        $validated = $request->validate([
+            "input" => "required|array",
+            "input.stock" => "required|integer|min:0",
+            "input.requests" => "required|array",
+            "input.requests.*" => "numeric"
+        ]);
+
+        $stock = $validated['input']['stock'];
+        $requests = $validated['input']['requests'];
+        $availed = $stock;
+        $validRequest = [];
+
+        foreach ($requests as $requestedAmount) {
+            if ($requestedAmount <= $availed && $requestedAmount > 0) {
+                $availed -= $requestedAmount;
+                $validRequest[] = true;
+            } else {
+                $validRequest[] = false;
+            }
+        }
+        if((count(array_filter($validRequest, fn($v) => $v === false))) === count($requests)){
+            return response()->json([
+                'success' => false,
+                'data' => null,
+                'error' => 'No valid requests found'
+            ]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => $validRequest,
+            'error' => null
+        ]);
+    }
 }
