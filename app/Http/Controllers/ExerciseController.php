@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
 
 
 class ExerciseController extends Controller
@@ -232,4 +233,49 @@ class ExerciseController extends Controller
             'error' => null
         ]);
     }
+public function shipment(Request $request)
+{
+    $validator = Validator::make($request->all(), [
+        'input' => 'required|array',
+        'input.ordered' => 'required|integer|min:1',
+        'input.shipped' => 'required|array',
+        'input.shipped.*' => 'required|integer|min:0',
+    ]);
+
+    if ($validator->fails()) {
+        return response()->json([
+            'success' => false,
+            'data' => null,
+            'error' => $validator->errors()->first()
+        ], 422);
+    }
+
+    $input = $validator->validated()['input'];
+
+    $ordered = $input['ordered'];
+    $shipped = $input['shipped'];
+
+    $totalShipped = array_sum($shipped);
+
+    if ($totalShipped > $ordered) {
+        return response()->json([
+            'success' => false,
+            'data' => null,
+            'error' => 'Total shipped quantity cannot be greater than ordered quantity.'
+        ], 422);
+    }
+
+    $remaining = $ordered - $totalShipped;
+
+    return response()->json([
+        'success' => true,
+        'data' => [
+            'remaining' => $remaining
+        ],
+        'error' => null
+    ]);
 }
+
+}
+
+
