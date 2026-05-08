@@ -282,7 +282,7 @@ class ExerciseController extends Controller
             'input' => 'required|array',
             "input.*" => "required|array",
             "input.*.id" => "required|string",
-            "input.*.time" => "nullable|integer|min:0"
+            "input.*.time" => "required|integer|min:0"
         ]);
         if ($validator->fails()) {
             return response()->json([
