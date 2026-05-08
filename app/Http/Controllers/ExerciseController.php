@@ -121,7 +121,7 @@ class ExerciseController extends Controller
             'error' => null
         ]);
     }
-     public function discount(Request $request)
+    public function discount(Request $request)
     {
         $validated = $request->validateWithBag('discount', [
             'input' => 'required|array',
@@ -163,23 +163,24 @@ class ExerciseController extends Controller
             'error' => null
         ]);
     }
-    public function approvalFlow(Request $request){
+    public function approvalFlow(Request $request)
+    {
 
-        $validated =$request->validate([
+        $validated = $request->validate([
             'input' => 'required|array',
             'input.steps' => 'required|array',
             'input.steps.*.id' => 'required|string|regex:/^[A-Z]+$/|in:A,B,C',
             'input.steps.*.depends_on' => 'nullable|string|regex:/^[A-Z]+$/|in:A,B,C'
         ]);
-        $input =$validated['input'];
+        $input = $validated['input'];
         $lastStepId = null;
         $allValidSteps = [];
-        $stepsCount= count($input['steps']);
+        $stepsCount = count($input['steps']);
         foreach ($input['steps'] as $idx => $step) {
             if ($idx === 0 && $step['depends_on'] === null) {
                 $lastStepId = $step['id'];
                 $allValidSteps[] = $step;
-            }elseif($lastStepId === $step['depends_on'] && $idx > 0 && $step['depends_on'] !== null){
+            } elseif ($lastStepId === $step['depends_on'] && $idx > 0 && $step['depends_on'] !== null) {
                 $lastStepId = $step['id'];
                 $allValidSteps[] = $step;
             }
@@ -219,7 +220,7 @@ class ExerciseController extends Controller
                 $validRequest[] = false;
             }
         }
-        if((count(array_filter($validRequest, fn($v) => $v === false))) === count($requests)){
+        if ((count(array_filter($validRequest, fn($v) => $v === false))) === count($requests)) {
             return response()->json([
                 'success' => false,
                 'data' => null,
@@ -233,49 +234,71 @@ class ExerciseController extends Controller
             'error' => null
         ]);
     }
-public function shipment(Request $request)
-{
-    $validator = Validator::make($request->all(), [
-        'input' => 'required|array',
-        'input.ordered' => 'required|integer|min:1',
-        'input.shipped' => 'required|array',
-        'input.shipped.*' => 'required|integer|min:0',
-    ]);
+    public function shipment(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'input' => 'required|array',
+            'input.ordered' => 'required|integer|min:1',
+            'input.shipped' => 'required|array',
+            'input.shipped.*' => 'required|integer|min:0',
+        ]);
 
-    if ($validator->fails()) {
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'data' => null,
+                'error' => $validator->errors()->first()
+            ], 422);
+        }
+
+        $input = $validator->validated()['input'];
+
+        $ordered = $input['ordered'];
+        $shipped = $input['shipped'];
+
+        $totalShipped = array_sum($shipped);
+
+        if ($totalShipped > $ordered) {
+            return response()->json([
+                'success' => false,
+                'data' => null,
+                'error' => 'Total shipped quantity cannot be greater than ordered quantity.'
+            ], 422);
+        }
+
+        $remaining = $ordered - $totalShipped;
+
         return response()->json([
-            'success' => false,
-            'data' => null,
-            'error' => $validator->errors()->first()
-        ], 422);
+            'success' => true,
+            'data' => [
+                'remaining' => $remaining
+            ],
+            'error' => null
+        ]);
     }
-
-    $input = $validator->validated()['input'];
-
-    $ordered = $input['ordered'];
-    $shipped = $input['shipped'];
-
-    $totalShipped = array_sum($shipped);
-
-    if ($totalShipped > $ordered) {
+     public function webhook(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'input' => 'required|array',
+            "input.*" => "required|array",
+            "input.*.id" => "required|string",
+            "input.*.time" => "nullable|integer|min:0"
+        ]);
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'data' => null,
+                'error' => $validator->errors()->first()
+            ], 422);
+        }
+        $input = $validator->validated()['input'];
+        $unique = collect($input)->sortBy('time')->unique('id')->values()->all();
         return response()->json([
-            'success' => false,
-            'data' => null,
-            'error' => 'Total shipped quantity cannot be greater than ordered quantity.'
-        ], 422);
+            'success' => true,
+            'data' => array_column($unique, 'id'),
+            'error' => null
+        ]);
     }
-
-    $remaining = $ordered - $totalShipped;
-
-    return response()->json([
-        'success' => true,
-        'data' => [
-            'remaining' => $remaining
-        ],
-        'error' => null
-    ]);
-}
-
 }
 
 

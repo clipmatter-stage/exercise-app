@@ -46,6 +46,5 @@ Route::post('/exercise-5-discount', [ExerciseController::class, 'discount']);
 Route::post('/exercise-6-approval-flow', [ExerciseController::class, 'approvalFlow']);
 Route::post('/exercise-7-inventory', [ExerciseController::class, 'inventory']);
 Route::post('/exercise-8-shipment', [ExerciseController::class, 'shipment']);
-
-
+Route::post('/exercise-9-webhook', [ExerciseController::class, 'webhook']);
 
