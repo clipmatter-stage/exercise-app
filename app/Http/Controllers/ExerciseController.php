@@ -276,7 +276,7 @@ class ExerciseController extends Controller
             'error' => null
         ]);
     }
-     public function webhook(Request $request)
+    public function webhook(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'input' => 'required|array',
@@ -296,6 +296,29 @@ class ExerciseController extends Controller
         return response()->json([
             'success' => true,
             'data' => array_column($unique, 'id'),
+            'error' => null
+        ]);
+    }
+
+    public function quoteExpiry(Request $request)
+    {
+        $validated = $request->validate([
+            "input" => "required|array",
+            "input.created_at" => "required|date_format:Y-m-d",
+            "input.valid_days" => "required|integer|min:1",
+            "input.current_date" => "required|date_format:Y-m-d"
+        ]);
+        $createdAt = Carbon::parse($validated['input']['created_at']);
+        $validDays = $validated['input']['valid_days'];
+        $currentDate = Carbon::parse($validated['input']['current_date']);
+        $expiryDate = $createdAt->copy()->addDays($validDays);
+        $isExpired = $currentDate > $expiryDate;
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'valid' => !$isExpired
+            ],
             'error' => null
         ]);
     }
