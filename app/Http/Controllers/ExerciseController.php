@@ -323,6 +323,48 @@ class ExerciseController extends Controller
             'error' => null
         ]);
     }
+    public function productVisibility(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            "input" => "required|array",
+            "input.customer" => "required|array",
+            "input.customer.tags" => "required|array",
+            "input.products" => "required|array",
+            "input.products.*.id" => "required|integer",
+            "input.products.*.allow" => "nullable|array",
+            "input.products.*.allow.*" => "required|string",
+            "input.products.*.block" => "nullable|array",
+            "input.products.*.block.*" => "required|string"
+        ]);
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'data' => null,
+                'error' => $validator->errors()->first()
+            ], 422);
+        }
+
+        $input = $validator->validated()['input'];
+        $customerTags = $input['customer']['tags'];
+        $products = $input['products'];
+        
+        $allowedProducts = array_filter($products, function ($product) use ($customerTags) {
+            if (!empty($product['block']) && !empty(array_intersect($product['block'], $customerTags))) {
+                return false;
+            }
+            if (!empty($product['allow'])) {
+                return !empty(array_intersect($product['allow'], $customerTags));
+            }
+            return true;
+        });
+
+        return response()->json([
+            'success' => true,
+            'data' => ['visible_products' => array_values(array_column($allowedProducts, 'id'))],
+            'error' => null
+        ]);
+
+    }
 }
 
 

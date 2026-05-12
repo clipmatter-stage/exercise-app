@@ -48,4 +48,5 @@ Route::post('/exercise-7-inventory', [ExerciseController::class, 'inventory']);
 Route::post('/exercise-8-shipment', [ExerciseController::class, 'shipment']);
 Route::post('/exercise-9-webhook', [ExerciseController::class, 'webhook']);
 Route::post('/exercise-10-quote-expiry', [ExerciseController::class, 'quoteExpiry']);
+Route::post('/exercise-11-product-visibility', [ExerciseController::class, 'productVisibility']);
 
