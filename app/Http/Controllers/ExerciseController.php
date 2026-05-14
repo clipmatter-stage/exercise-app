@@ -365,6 +365,85 @@ class ExerciseController extends Controller
         ]);
 
     }
+    public function bundlePricing(Request $request){
+        $validated = $request->validate([
+            'input' => 'required|array',
+            'input.items' => 'required|array',
+            'input.items.*.id' => 'required|integer',
+            'input.items.*.price' => 'required|numeric|min:0',
+            'input.bundle_price' => 'required|numeric|min:0',
+            'input.apply_bundle' => 'required|boolean',
+        ]);
+
+        $input = $validated['input'];
+
+        if (empty($input['items'])) {
+            return response()->json([
+                'success' => false,
+                'data' => null,
+                'error' => 'Items array cannot be empty'
+            ]);
+        }
+
+        $totalIndividualPrice = array_sum(array_column($input['items'], 'price'));
+        $finalPrice = $input['apply_bundle'] ? min($totalIndividualPrice, $input['bundle_price']) : $totalIndividualPrice;
+
+        return response()->json([
+            'success' => true,
+            'data' => ['final_price' => $finalPrice],
+            'error' => null
+        ]);
+    }
+
+    public function cartMerge(Request $request)
+    {
+        $validated = $request->validate([
+            'input' => 'required|array',
+            'input.guest' => 'required|array',
+            'input.guest.*.id' => 'required|integer',
+            'input.guest.*.qty' => 'required|integer|min:1',
+            'input.user' => 'required|array',
+            'input.user.*.id' => 'required|integer',
+            'input.user.*.qty' => 'required|integer|min:1',
+        ]);
+
+        if (empty($validated['input']['guest']) && empty($validated['input']['user'])) {
+            return response()->json([
+                'success' => false,
+                'data' => null,
+                'error' => 'Both guest and user carts are empty'
+            ]);
+        }
+
+        $items = array_merge(
+            $validated['input']['guest'],
+            $validated['input']['user']
+        );
+
+        $finalCart = [];
+
+        foreach ($items as $item) {
+            $id = $item['id'];
+
+            if (isset($finalCart[$id])) {
+                $finalCart[$id]['qty'] += $item['qty'];
+            } else {
+                $finalCart[$id] = [
+                    'id' => $id,
+                    'qty' => $item['qty'],
+                ];
+            }
+        }
+
+        $finalCart = array_values($finalCart);
+
+        return response()->json([
+            'success' => true,
+            'data' => $finalCart,
+            'error' => null
+        ]);
+    }
+
 }
 
 
