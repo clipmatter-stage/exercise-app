@@ -443,6 +443,34 @@ class ExerciseController extends Controller
             'error' => null
         ]);
     }
+    public function upsell(Request $request){
+        $validated = $request->validate([
+            'input' => 'required|array',
+            'input.nums' => 'required|array',
+            'input.nums.*' => 'required|integer',
+            'input.target' => 'required|integer',
+        ]);
+
+        $nums = $validated['input']['nums'];
+        $target = $validated['input']['target'];
+        $numIndices = [];
+        foreach ($nums as $index => $num) {
+            $complement = $target - $num;
+            if (isset($numIndices[$complement])) {
+                return response()->json([
+                    'success' => true,
+                    'data' => [$numIndices[$complement], $index],
+                    'error' => null
+                ]);
+            }
+            $numIndices[$num] = $index;
+        }
+        return response()->json([
+            'success' => false,
+            'data' => null,
+            'error' => 'No solution found'
+        ]);
+    }
 
 }
 

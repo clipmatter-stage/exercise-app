@@ -51,7 +51,4 @@ Route::post('/exercise-10-quote-expiry', [ExerciseController::class, 'quoteExpir
 Route::post('/exercise-11-product-visibility', [ExerciseController::class, 'productVisibility']);
 Route::post('/exercise-12-bundle-pricing', [ExerciseController::class, 'bundlePricing']);
 Route::post('/exercise-13-cart-merge', [ExerciseController::class, 'cartMerge']);
-
-
-
-
+Route::post('/exercise-14-upsell', [ExerciseController::class, 'upsell']);
