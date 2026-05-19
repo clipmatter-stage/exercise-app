@@ -52,3 +52,4 @@ Route::post('/exercise-11-product-visibility', [ExerciseController::class, 'prod
 Route::post('/exercise-12-bundle-pricing', [ExerciseController::class, 'bundlePricing']);
 Route::post('/exercise-13-cart-merge', [ExerciseController::class, 'cartMerge']);
 Route::post('/exercise-14-upsell', [ExerciseController::class, 'upsell']);
+Route::post('/exercise-15-shipping-rule', [ExerciseController::class, 'shippingRuleEngine']);
