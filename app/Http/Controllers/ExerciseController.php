@@ -347,7 +347,7 @@ class ExerciseController extends Controller
         $input = $validator->validated()['input'];
         $customerTags = $input['customer']['tags'];
         $products = $input['products'];
-        
+
         $allowedProducts = array_filter($products, function ($product) use ($customerTags) {
             if (!empty($product['block']) && !empty(array_intersect($product['block'], $customerTags))) {
                 return false;
@@ -365,7 +365,8 @@ class ExerciseController extends Controller
         ]);
 
     }
-    public function bundlePricing(Request $request){
+    public function bundlePricing(Request $request)
+    {
         $validated = $request->validate([
             'input' => 'required|array',
             'input.items' => 'required|array',
@@ -443,7 +444,8 @@ class ExerciseController extends Controller
             'error' => null
         ]);
     }
-    public function upsell(Request $request){
+    public function upsell(Request $request)
+    {
         $validated = $request->validate([
             'input' => 'required|array',
             'input.nums' => 'required|array',
@@ -471,52 +473,73 @@ class ExerciseController extends Controller
             'error' => 'No solution found'
         ]);
     }
-    public function shippingRuleEngine(Request $request){
-    $validated = $request->validate([
-        'input' => 'required|array',
-        'input.order' => 'required|array',
-        'input.rules' => 'required|array',
-        'input.rules.*.id' => 'required|integer',
-        'input.rules.*.method' => 'required|string',
-        'input.rules.*.priority' => 'required|integer',
-    ]);
+    public function shippingRuleEngine(Request $request)
+    {
+        $validated = $request->validate([
+            'input' => 'required|array',
+            'input.order' => 'required|array',
+            'input.rules' => 'required|array',
+            'input.rules.*.id' => 'required|integer',
+            'input.rules.*.method' => 'required|string',
+            'input.rules.*.priority' => 'required|integer',
+        ]);
 
-    $order = $validated['input']['order'];
-    $rules = $validated['input']['rules'];
-    $matchingRules = [];
-    foreach ($rules as $rule) {
-        $match = true;
-        foreach ($rule as $key => $value) {
-            if ($key !== 'id' && $key !== 'method' && $key !== 'priority') {
-                if (!isset($order[$key]) || $order[$key] != $value) {
-                    $match = false;
-                    break;
+        $order = $validated['input']['order'];
+        $rules = $validated['input']['rules'];
+        $matchingRules = [];
+
+        foreach ($rules as $rule) {
+            $match = true;
+            foreach ($rule as $key => $value) {
+                if (in_array($key, ['id', 'method', 'priority'])) {
+                    continue;
+                }
+
+                if (str_starts_with($key, 'min_')) {
+                    $attribute = substr($key, 4);
+                    if (!isset($order[$attribute]) || $order[$attribute] < $value) {
+                        $match = false;
+                        break;
+                    }
+                } elseif (str_starts_with($key, 'max_')) {
+                    $attribute = substr($key, 4);
+                    if (!isset($order[$attribute]) || $order[$attribute] > $value) {
+                        $match = false;
+                        break;
+                    }
+                } else {
+                    if (!isset($order[$key]) || $order[$key] != $value) {
+                        $match = false;
+                        break;
+                    }
                 }
             }
-        }
-        if ($match) {
-            $matchingRules[] = $rule;
-        }
-    }
 
-    if (empty($matchingRules)) {
+            if ($match) {
+                $matchingRules[] = $rule;
+            }
+        }
+
+        if (empty($matchingRules)) {
+            return response()->json([
+                'success' => false,
+                'data' => null,
+                'error' => 'No matching shipping method found'
+            ]);
+        }
+
+        usort($matchingRules, function ($a, $b) {
+            return $b['priority'] <=> $a['priority'];
+        });
+
         return response()->json([
-            'success' => false,
-            'data' => null,
-            'error' => 'No matching shipping method found'
+            'success' => true,
+            'data' => $matchingRules[0]['method'],
+            'error' => null
         ]);
     }
 
-    usort($matchingRules, function ($a, $b) {
-        return $b['priority'] <=> $a['priority'];
-    });
-
-    return response()->json([
-        'success' => true,
-        'data' => $matchingRules[0]['method'],
-        'error' => null
-    ]);
-}
+    
 
 }
 
