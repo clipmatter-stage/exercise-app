@@ -53,3 +53,6 @@ Route::post('/exercise-12-bundle-pricing', [ExerciseController::class, 'bundlePr
 Route::post('/exercise-13-cart-merge', [ExerciseController::class, 'cartMerge']);
 Route::post('/exercise-14-upsell', [ExerciseController::class, 'upsell']);
 Route::post('/exercise-15-shipping-rule', [ExerciseController::class, 'shippingRuleEngine']);
+Route::post('/exercise-16-fraud-check', [ExerciseController::class, 'fraudCheck']);
+Route::post('/exercise-17-shopify-price-adjustment', [ExerciseController::class, 'shopifyPriceAdjustment']);
+Route::post('/exercise-18-data-sync', [ExerciseController::class, 'dataSync']);

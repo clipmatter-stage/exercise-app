@@ -538,8 +538,106 @@ class ExerciseController extends Controller
             'error' => null
         ]);
     }
+    public function fraudCheck(Request $request)
+    {
+        $validated = $request->validate([
+            'input' => 'required|array',
+            'input.order' => 'required|array',
+            'input.order.amount' => 'required|numeric',
+            'input.order.country' => 'required|string',
+            'input.order.previous_orders' => 'required|numeric',
+            'input.rules' => 'required|array',
+            'input.rules.max_amount' => 'required|numeric',
+            'input.rules.blocked_countries' => 'required|array'
+        ]);
 
-    
+        $input = $validated['input'];
+        extract($input);
+        $maxAmount = $rules['max_amount'];
+        $blockedCountries = $rules['blocked_countries'];
+
+        if ($order['amount'] > $maxAmount) {
+            return response()->json([
+                'success' => false,
+                'data' => null,
+                'error' => 'Order amount exceeds the maximum allowed'
+            ]);
+        }
+
+        if (in_array($order['country'], $blockedCountries)) {
+            return response()->json([
+                'success' => false,
+                'data' => null,
+                'error' => 'Orders from this country are blocked'
+            ]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => 'Order is valid',
+            'error' => null
+        ]);
+    }
+    public function shopifyPriceAdjustment(Request $request)
+    {
+        $validated = $request->validate([
+            'input' => 'required|array',
+            "input.prices" => 'required|array',
+            'input.prices.*.*' => 'required|numeric',
+            "input.adjustment_value" => 'required|numeric'
+        ]);
+
+        $input = $validated['input'];
+        $prices = array_merge(...$input['prices']);
+        sort($prices);
+        $adjustmentValue = $input['adjustment_value'];
+        foreach ($prices as $price) {
+            if ($price % $adjustmentValue !== 0) {
+                return response()->json([
+                    'success' => true,
+                    'data' => ["minimum_operations" => -1],
+                ]);
+            }
+        }
+        //find Best Target Price
+        $middleValue = $prices[intval(count($prices) / 2)];
+        $minimumOperations = 0;
+        foreach ($prices as $price) {
+            $minimumOperations += abs($price - $middleValue) / $adjustmentValue;
+        }
+        return response()->json([
+            'success' => true,
+            'data' => ["minimum_operations" => $minimumOperations],
+        ]);
+    }
+    public function dataSync(Request $request)
+    {
+        $validated = $request->validate([
+            'input' => 'required|array',
+            'input.shopify' => 'required|array',
+            'input.shopify.price' => 'required|numeric',
+            'input.shopify.updated_at' => 'required|numeric',
+            'input.internal' => 'required|array',
+            'input.internal.price' => 'required|numeric',
+            'input.internal.updated_at' => 'required|numeric',
+        ]);
+
+        $input = $validated['input'];
+        $shopify = $input['shopify'];
+        $internal = $input['internal'];
+        $lastUpdated = max($shopify['updated_at'], $internal['updated_at']);
+        $finalPrice = 0;
+        if ($lastUpdated === $shopify['updated_at']) {
+            $finalPrice = $shopify['price'];
+        } elseif ($lastUpdated === $internal['updated_at']) {
+            $finalPrice = $internal['price'];
+        }
+        return response()->json([
+            'success' => true,
+            'data' => ['price' => $finalPrice],
+            'error' => null
+        ]);
+    }
 
 }
 
