@@ -56,3 +56,5 @@ Route::post('/exercise-15-shipping-rule', [ExerciseController::class, 'shippingR
 Route::post('/exercise-16-fraud-check', [ExerciseController::class, 'fraudCheck']);
 Route::post('/exercise-17-shopify-price-adjustment', [ExerciseController::class, 'shopifyPriceAdjustment']);
 Route::post('/exercise-18-data-sync', [ExerciseController::class, 'dataSync']);
+Route::post('/exercise-19-variant-control', [ExerciseController::class, 'variantControl']);
+Route::post(' /exercise-20-order-state', [ExerciseController::class, 'orderState']);

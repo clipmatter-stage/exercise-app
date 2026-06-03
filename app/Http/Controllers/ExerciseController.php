@@ -638,6 +638,66 @@ class ExerciseController extends Controller
             'error' => null
         ]);
     }
+        public function variantControl(Request $request)
+    {
+        $validated = $request->validate([
+            'input' => 'required|array',
+            'input.options' => 'required|array',
+            'input.options.*.name' => 'required|string',
+            'input.options.*.values' => 'required|numeric',
+            'input.limit' => 'required|numeric',
+        ]);
+        $input = $validated['input'];
+        $options = $input['options'];
+        $limit = $input['limit'];
+        $combinations = array_product(array_column($options, 'values'));
+        if ($combinations > $limit) {
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'combinations' => $combinations,
+                    'limit_exceeded' => true
+                ],
+                'error' => 'Number of combinations exceeds the limit'
+            ]);
+        }
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'combinations' => $combinations,
+                'limit_exceeded' => false
+            ],
+            'error' => null
+        ]);
+    }
+
+    public function orderState(Request $request){
+        $validated = $request->validate([
+            'input' => 'required|array',
+            'input.transitions' => 'required|array',
+            'input.transitions.*' => 'required|string|in:created,paid,processing,shipped,delivered',
+        ]);
+
+        $transitions = $validated['input']['transitions'];
+        $allowedFlow = ['created', 'paid', 'processing', 'shipped', 'delivered'];
+
+        $isValid = true;
+        $currentIndex = 0;
+
+        foreach ($transitions as $transition) {
+            if ($transition !== $allowedFlow[$currentIndex]) {
+                $isValid = false;
+                break;
+            }
+            $currentIndex++;
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => ['is_valid' => $isValid],
+            'error' => null
+        ]);
+    }
 
 }
 
